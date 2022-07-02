@@ -22,7 +22,7 @@ type InterestRateDefinition =
       Rate: Decimal }
 
 type RateChange =
-    { Date: Date
+    { Date: DateOnly
       RateDefinition: InterestRateDefinition }
 
 
