@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Flow.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 
