@@ -21,14 +21,14 @@ type LoanTransaction =
       Amount: Decimal
       TransactionType: LoanTransactionType }
 
-type RateInterval =
+type RateIntervalType =
     | Daily
     | Monthly
     | Annually
 
 
 type InterestRateDefinition =
-    { RateInterval: RateInterval
+    { RateInterval: RateIntervalType
       Rate: Decimal }
 
 
@@ -42,7 +42,7 @@ type Loan =
 
 
 /// Convert the InterestRateDefinition to use an equivalent rate with a different interval
-let convertRateDefinitionInterval(interestRateDefinition:InterestRateDefinition,targetInterval:RateInterval) =
+let convertRateDefinitionInterval(interestRateDefinition:InterestRateDefinition,targetInterval:RateIntervalType) =
     let originalInterval = interestRateDefinition.RateInterval
     let result =
         match originalInterval with

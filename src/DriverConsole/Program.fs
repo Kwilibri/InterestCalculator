@@ -26,5 +26,18 @@ let loanTransactions =
 
     ]
 
+let rateDefinition =
+    {
+        RateInterval = Annually
+        Rate = 0.18M
+
+    }
+
+let loan =
+    { RateDefinition =  rateDefinition; LoanTransactions = loanTransactions }
+
+let dailyEquivalentRateDefinition =
+    convertRateDefinitionInterval( rateDefinition, Monthly)
+
 for transaction in loanTransactions do
     printfn "%s" (transaction.TransactionDate.ToShortDateString())
