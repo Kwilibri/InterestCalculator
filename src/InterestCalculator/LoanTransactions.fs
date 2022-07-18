@@ -82,3 +82,15 @@ let convertRateDefinitionInterval(interestRateDefinition:InterestRateDefinition,
                 interestRateDefinition
     result
 
+let calculateDailyCompoundInterestForRangeWithOneTransaction(openingBalance:decimal,dailyRate:Decimal,startDate:DateOnly,endDate:DateOnly):Decimal =
+    // See this stackoverflow answer.
+    //https://stackoverflow.com/questions/6425501/is-there-a-math-api-for-powdecimal-decimal
+    // .net decided to not implement pow for decimal, leading to these ridiculous hacks
+  let precisionMagnifier = (double)1_000_000.0
+  let numberOfDays = (double)(endDate.DayNumber  - startDate.DayNumber)
+  let exponent = numberOfDays/365.*1.0  //Assumes incoming rate = annual
+  let doubleResult = (double)openingBalance * (1.0 + (double(dailyRate)))**(exponent)-(double)openingBalance
+  let increasedPrecisionResult = (doubleResult * precisionMagnifier)
+  let intResult = (decimal)increasedPrecisionResult
+  let result = (decimal)intResult / (decimal)precisionMagnifier
+  result
