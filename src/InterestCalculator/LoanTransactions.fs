@@ -43,8 +43,8 @@ type InterestRateDefinition =
 
 type Loan =
     {
-        RateChanges: List<InterestRateDefinition>
-        LoanTransactions: List<LoanTransaction>
+        RateChanges: InterestRateDefinition []
+        LoanTransactions: LoanTransaction []
     }
 
 
