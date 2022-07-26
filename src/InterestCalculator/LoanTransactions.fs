@@ -21,6 +21,13 @@ type LoanTransaction =
       Amount: Decimal
       TransactionType: LoanTransactionType }
 
+type InterestCalculationAtom =
+    { StartDate: DateOnly
+      EndDate: DateOnly
+      OpeningBalance: Decimal
+      EffectiveDailyRate: Decimal
+    }
+
 type RateIntervalType =
     | Daily
     | Monthly
@@ -28,13 +35,15 @@ type RateIntervalType =
 
 
 type InterestRateDefinition =
-    { RateInterval: RateIntervalType
+    {
+      RateStartDate: DateOnly
+      RateInterval: RateIntervalType
       Rate: Decimal }
 
 
 type Loan =
     {
-        RateDefinition: InterestRateDefinition
+        RateChanges: List<InterestRateDefinition>
         LoanTransactions: List<LoanTransaction>
     }
 
@@ -55,34 +64,45 @@ let convertRateDefinitionInterval(interestRateDefinition:InterestRateDefinition,
                 // First convert to annual
                 let annualRate = interestRateDefinition.Rate * 365M
                 let monthlyRate = annualRate / 12M
-                { RateInterval = Monthly; Rate = monthlyRate }
+                {
+                    RateStartDate = interestRateDefinition.RateStartDate
+                    RateInterval = Monthly;
+                    Rate = monthlyRate
+                }
             | Annually ->
                 let annualRate = interestRateDefinition.Rate * 365M
-                { RateInterval = Annually; Rate = annualRate }
+                {
+                    RateStartDate = interestRateDefinition.RateStartDate
+                    RateInterval = Annually;
+                    Rate = annualRate
+                }
         | Monthly ->
             match targetInterval with
             | Daily ->
                 let annualRate = interestRateDefinition.Rate * 12M
                 let dailyRate = annualRate / 365M
-                { RateInterval = targetInterval; Rate = dailyRate}
+                {
+                    RateStartDate = interestRateDefinition.RateStartDate
+                    RateInterval = targetInterval;
+                    Rate = dailyRate}
             | Monthly ->
                 interestRateDefinition
             | Annually ->
                 let annualRate = interestRateDefinition.Rate * 12M
-                {RateInterval = targetInterval; Rate = annualRate}
+                {RateStartDate = interestRateDefinition.RateStartDate;RateInterval = targetInterval; Rate = annualRate}
         | Annually ->
             match targetInterval with
             | Daily ->
                 let dailyRate = interestRateDefinition.Rate/365M
-                {RateInterval = targetInterval; Rate = dailyRate}
+                {RateStartDate = interestRateDefinition.RateStartDate;RateInterval = targetInterval; Rate = dailyRate}
             | Monthly ->
                 let monthlyRate = interestRateDefinition.Rate/12M
-                {RateInterval = targetInterval; Rate = monthlyRate}
+                {RateStartDate = interestRateDefinition.RateStartDate;RateInterval = targetInterval; Rate = monthlyRate}
             | Annually ->
                 interestRateDefinition
     result
 
-let calculateDailyCompoundInterestForRangeWithOneTransaction(openingBalance:decimal,dailyRate:Decimal,startDate:DateOnly,endDate:DateOnly):Decimal =
+let dailyCompoundedInterestForInterval(openingBalance:decimal,dailyRate:Decimal,startDate:DateOnly,endDate:DateOnly):Decimal =
     // See this stackoverflow answer.
     //https://stackoverflow.com/questions/6425501/is-there-a-math-api-for-powdecimal-decimal
     // .net decided to not implement pow for decimal, leading to these ridiculous hacks
@@ -94,3 +114,4 @@ let calculateDailyCompoundInterestForRangeWithOneTransaction(openingBalance:deci
   let intResult = (decimal)increasedPrecisionResult
   let result = (decimal)intResult / (decimal)precisionMagnifier
   result
+
