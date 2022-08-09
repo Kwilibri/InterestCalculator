@@ -194,3 +194,7 @@ printfn "Printing transaction atoms"
 for transaction in transactionAtoms do
     printfn "%A" transaction
 
+
+// Suggested starting point when next working on the system.
+// Merge the interest change transactions atoms and the transaction atoms into one series of atoms.
+// Also, we need to create atoms such as the month end balance transactions, that also needs to be merged into the series.
