@@ -176,8 +176,21 @@ let calculateTransactionLoanAtoms(loan:Loan,calculationEndDate:DateOnly) =
     let atoms = Array.init atomsCount (fun index -> createAtomForIndexedTransaction(sortedTransactions,interestChangeAtoms,index,calculationEndDate))
     atoms
 
+
 let loanCalculationEndDate = DateOnly(2022,07,26)
-let interestChangeAtoms = calculateInterestChangeLoanAtoms(loan, loanCalculationEndDate)
+let interestChangeAtomsResult = calculateInterestChangeLoanAtoms(loan, loanCalculationEndDate)
 let transactionAtoms = calculateTransactionLoanAtoms(loan, loanCalculationEndDate)
 
-0
+let interestChangeAtoms =
+    match interestChangeAtomsResult with
+    | Ok item -> item
+    | Error _ -> failwith "There was an error calculation interest change transactions"
+printfn "Printing interest rate transaction atoms"
+for item in interestChangeAtoms do
+    printfn "%A" item
+
+printfn "--------------------------------------------------------------------------------"
+printfn "Printing transaction atoms"
+for transaction in transactionAtoms do
+    printfn "%A" transaction
+
