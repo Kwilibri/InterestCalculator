@@ -1,6 +1,7 @@
 ﻿open System
 open Loans
 open System.Diagnostics.Metrics
+open System.Diagnostics
 
 let loanTransactions =
     [|
@@ -40,6 +41,11 @@ let rateChanges =
             Rate = 0.1200M
         }
         {
+            RateStartDate = DateOnly(2021,11,19)
+            RateInterval = Annually
+            Rate = 0.1225M
+        }
+        {
             RateStartDate = DateOnly(2022,03,25)
             RateInterval = Annually
             Rate = 0.1275M
@@ -66,6 +72,9 @@ let annualEquivalentRate =
 
 type loanCalculationErrors =
     | RateStartDateTooLate
+    | TargetDateTooEarly
+    | TargetDateTooLate
+
 
 let calculateInterestChangeLoanAtoms(loan:Loan,calculationEndDate:DateOnly) =
     let sortedRateChanges =  loan.RateChanges |> Array.sortBy(fun x -> x.RateStartDate)
@@ -100,44 +109,75 @@ let calculateInterestChangeLoanAtoms(loan:Loan,calculationEndDate:DateOnly) =
             Ok atoms
     result
 
+let activeRateForGivenDate(interestCalculationAtoms:InterestCalculationAtom[],targetDate:DateOnly) =
+    let count = interestCalculationAtoms.Length
+    if (targetDate < interestCalculationAtoms[0].StartDate) then
+        Error TargetDateTooEarly
+    elif (targetDate > interestCalculationAtoms[count-1].EndDate) then
+        Error TargetDateTooLate
+    else
+        let mutable candidate = 0.0M
+        let mutable iterator = 0
+        let mutable startDate = interestCalculationAtoms[iterator].StartDate
+        let mutable endDate = interestCalculationAtoms[iterator].EndDate
+        let maxDate = interestCalculationAtoms[count-1].EndDate
+
+        while (endDate <= maxDate) do
+            if (targetDate >= startDate && targetDate <= endDate) then
+                candidate <- interestCalculationAtoms[iterator].EffectiveDailyRate
+            iterator <- iterator + 1
+            if (iterator <= count-1) then
+                startDate <- interestCalculationAtoms[iterator].StartDate
+                endDate <- interestCalculationAtoms[iterator].EndDate
+            else
+                endDate <- maxDate.AddDays(1)
+        Ok candidate
+
+
+let createAtomForIndexedTransaction(
+        sortedTransactions:LoanTransaction[],
+        interestChangeAtoms:InterestCalculationAtom[],
+        index:int,
+        calculationEndDate:DateOnly)=
+    let item = sortedTransactions[index]
+    let dailyRateResult = activeRateForGivenDate(interestChangeAtoms,item.TransactionDate)
+    let dailyRate =
+        match dailyRateResult with
+        | Ok item -> item
+        | Error err -> failwith "Couldn't calculate the applicable interest rate"
+    let startDate = item.TransactionDate
+    let endDate =
+        if (index = sortedTransactions.Length-1) then
+              calculationEndDate
+          else
+              sortedTransactions[index+1].TransactionDate.AddDays(-1)
+    let openingBalance = item.Amount
+    let result =
+        {
+            StartDate = startDate
+            EndDate = endDate
+            OpeningBalance = openingBalance
+            EffectiveDailyRate = dailyRate
+        }
+    result
+
+
+
 
 let calculateTransactionLoanAtoms(loan:Loan,calculationEndDate:DateOnly) =
     let sortedTransactions = loan.LoanTransactions |> Array.sortBy(fun x -> x.TransactionDate)
     let atomsCount = sortedTransactions.Length
-    let createAtomForIndexedTransaction(sortedTransactions:LoanTransaction[],index:int,calculationEndDate:DateOnly)=
-        let item = sortedTransactions[index]
-        //Todo: Start Here
-        >>
-        let dailyRate = -1.0M //Todo: figure out how to get active daily rate at this point.
-        let startDate = item.TransactionDate
-        let endDate =
-            if (index = sortedTransactions.Length-1) then
-                  calculationEndDate
-              else
-                  sortedTransactions[index+1].TransactionDate.AddDays(-1)
-        let openingBalance = item.Amount
-        let result =
-            {
-                StartDate = startDate
-                EndDate = endDate
-                OpeningBalance = openingBalance
-                EffectiveDailyRate = dailyRate
-            }
-        result
-    let atoms = Array.init atomsCount (fun index -> createAtomForIndexedTransaction(sortedTransactions,index,calculationEndDate))
+    let interestChangeAtomsResult = calculateInterestChangeLoanAtoms(loan, calculationEndDate)
+    let interestChangeAtoms =
+        match interestChangeAtomsResult with
+        | Ok item -> item
+        | Error err -> failwith "incorrect Date"
+
+    let atoms = Array.init atomsCount (fun index -> createAtomForIndexedTransaction(sortedTransactions,interestChangeAtoms,index,calculationEndDate))
     atoms
 
 let loanCalculationEndDate = DateOnly(2022,07,26)
-
 let interestChangeAtoms = calculateInterestChangeLoanAtoms(loan, loanCalculationEndDate)
 let transactionAtoms = calculateTransactionLoanAtoms(loan, loanCalculationEndDate)
 
-
-let mutable interest = 0.0M
-for transaction in loan.LoanTransactions do
-
-    interest <-  interest + dailyCompoundedInterestForInterval(transaction.Amount ,annualEquivalentRate.Rate,DateOnly(2021, 10, 21),DateOnly(2021, 10, 26))
-
-
-for transaction in loanTransactions do
-    printfn "%s" (transaction.TransactionDate.ToShortDateString())
+0
