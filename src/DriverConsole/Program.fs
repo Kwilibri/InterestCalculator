@@ -205,16 +205,12 @@ let interestChangeAtoms =
     | Ok item -> item
     | Error _ -> failwith "There was an error calculation interest change transactions"
 
+
 printfn "Printing interest rate transaction atoms"
-
-for item in interestChangeAtoms do
-    printfn "%A" item
-
+interestChangeAtoms |> Array.iter (printfn "%A")
 printfn "--------------------------------------------------------------------------------"
 printfn "Printing transaction atoms"
-
-for transaction in transactionAtoms do
-    printfn "%A" transaction
+transactionAtoms |> Array.iter (printfn "%A")
 
 
 // Suggested starting point when next working on the system.
