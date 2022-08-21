@@ -1,5 +1,6 @@
 ﻿open System
 open Loans
+open DateUtils
 
 let loanTransactions =
     [| { TransactionDate = DateOnly(2021, 3, 31)
@@ -192,9 +193,6 @@ let calculateTransactionLoanAtoms (loan: Loan, calculationEndDate: DateOnly) =
     atoms
 
 
-//let calculateMonthlyBalanceAtoms (loan: Loan, calculationEndDate:DateOnly) =
-
-
 let loanCalculationEndDate = DateOnly(2022, 7, 26)
 
 let interestChangeAtomsResult =
@@ -208,6 +206,8 @@ let interestChangeAtoms =
     | Error _ -> failwith "There was an error calculation interest change transactions"
 
 
+
+let monthsList = calculateMonthEndsInInterval(DateOnly(2020,01,01),DateOnly(2021,01,30))
 printfn "Printing interest rate transaction atoms"
 interestChangeAtoms |> Array.iter (printfn "%A")
 printfn "--------------------------------------------------------------------------------"
