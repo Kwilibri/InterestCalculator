@@ -1,7 +1,5 @@
 ﻿open System
 open Loans
-open System.Diagnostics.Metrics
-open System.Diagnostics
 
 let loanTransactions =
     [| { TransactionDate = DateOnly(2021, 3, 31)
