@@ -40,7 +40,8 @@ let rateChanges =
        |]
 
 let loan =
-    { RateChanges = rateChanges
+    { StartDate = DateOnly(2021,03,31)
+      RateChanges = rateChanges
       LoanTransactions = loanTransactions }
 
 let annualEquivalentRate = convertRateDefinitionInterval (rateChanges[0], Annually)
@@ -61,7 +62,7 @@ let calculateInterestChangeLoanAtoms (loan: Loan, calculationEndDate: DateOnly) 
         loan.LoanTransactions
         |> Array.sortBy (fun x -> x.TransactionDate)
 
-    let firstTransactionDate = sortedTransactions.[0].TransactionDate
+    let firstTransactionDate = loan.StartDate
     let firstKnownRateDate = sortedRateChanges.[0].RateStartDate
 
     let result =
@@ -189,6 +190,9 @@ let calculateTransactionLoanAtoms (loan: Loan, calculationEndDate: DateOnly) =
             createAtomForIndexedTransaction (sortedTransactions, interestChangeAtoms, index, calculationEndDate))
 
     atoms
+
+
+//let calculateMonthlyBalanceAtoms (loan: Loan, calculationEndDate:DateOnly) =
 
 
 let loanCalculationEndDate = DateOnly(2022, 7, 26)

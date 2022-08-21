@@ -40,7 +40,8 @@ type InterestRateDefinition =
 
 
 type Loan =
-    { RateChanges: InterestRateDefinition []
+    { StartDate:DateOnly
+      RateChanges: InterestRateDefinition []
       LoanTransactions: LoanTransaction [] }
 
 
